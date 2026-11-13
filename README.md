@@ -1,6 +1,6 @@
-# SECURITY ARCADE · InTouchCX
+# SECURITY ARCADE · InTouchCX (Fraud Awareness Week)
 
-Aplicación web gamificada de concienciación en seguridad de la información, ingeniería social y cumplimiento normativo **PCI DSS v4.0.1**. Diseñada específicamente como una experiencia arcade móvil de alto impacto para colaboradores de **InTouchCX**, optimizada para teléfonos celulares en orientación vertical y pantallas corporativas.
+Aplicación web gamificada para la **Fraud Awareness Week** de **InTouchCX**, centrada en concienciación en seguridad de la información, prevención de fraude, ingeniería social y cumplimiento normativo **PCI DSS v4.0.1**. Diseñada específicamente como una experiencia arcade móvil de alto impacto para colaboradores de **InTouchCX**, optimizada para teléfonos celulares en orientación vertical y pantallas corporativas.
 
 ---
 

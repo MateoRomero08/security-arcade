@@ -187,7 +187,7 @@ export default function TvModePage() {
 
       {/* Footer */}
       <footer className="pt-4 border-t border-brand-primary/20 flex items-center justify-between text-xs text-brand-muted font-mono">
-        <div>InTouchCX · Information Security & PCI DSS Awareness v4.0.1</div>
+        <div>InTouchCX · Fraud Awareness Week · PCI DSS v4.0.1</div>
         <div className="text-brand-primary">LIVE STANDINGS</div>
       </footer>
     </div>

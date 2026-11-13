@@ -12,7 +12,7 @@ import { COMPANY_AREAS } from "@/config/areas";
 const DEFAULT_AREAS = COMPANY_AREAS;
 
 const DEFAULT_CONSENT_TEXT =
-  "I consent to participating in the InTouchCX Security Awareness Campaign and understand that my nickname and aggregated score will be displayed on the internal company leaderboard.";
+  "I consent to participating in the InTouchCX Fraud Awareness Week Campaign and understand that my nickname and aggregated score will be displayed on the internal company leaderboard.";
 
 export default function RegistroPage() {
   const router = useRouter();

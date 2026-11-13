@@ -14,7 +14,7 @@ export const BRAND_CONFIG = {
   companyName: "InTouchCX",
   appName: "SECURITY ARCADE",
   appSubtitle: "Protect operations in two decisions",
-  eventTagline: "Security Awareness Week · InTouchCX",
+  eventTagline: "Fraud Awareness Week · InTouchCX",
 
   // Configuración de Logo
   logo: {

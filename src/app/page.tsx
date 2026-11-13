@@ -87,7 +87,7 @@ export default function ArcadeStartScreen() {
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#051B0B]/70 border border-[#43E568]/30 backdrop-blur-md">
             <span className="w-1.5 h-1.5 rounded-full bg-[#43E568] animate-pulse" />
             <span className="text-[9px] font-pixel text-[#43E568] tracking-widest uppercase">
-              SECURITY AWARENESS
+              FRAUD AWARENESS WEEK
             </span>
           </div>
 
