@@ -248,9 +248,12 @@ export default function AuditorGamePage() {
         throw new Error(`Server returned HTTP ${res.status}`);
       }
 
-      const data: SessionResult = await res.json();
+      const data: SessionResult & { dbError?: string } = await res.json();
       if (!data || !Array.isArray(data.findings)) {
         throw new Error("Invalid response format");
+      }
+      if (data.dbError) {
+        console.error("⚠️ [Supabase DB Error]", data.dbError);
       }
 
       setResult(data);

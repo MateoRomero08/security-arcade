@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateAuditGameSession, generateFraudGameSession } from "@/lib/engine/game-generator";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 // In-memory store for active session snapshots (fallback / local demo)
 // Accessed safely across routes via globalThis without exporting at module level
 const sessionSnapshots = new Map<string, any>();

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArcadeHeader } from "@/components/arcade/ArcadeHeader";
 import { MascotAuditor } from "@/components/arcade/MascotAuditor";
 import { usePlayerStore } from "@/stores/playerStore";
@@ -12,9 +12,9 @@ import { COMPANY_AREAS } from "@/config/areas";
 const DEFAULT_AREAS = COMPANY_AREAS;
 
 const DEFAULT_CONSENT_TEXT =
-  "I agree to participate in this security awareness training and authorize the display of my short name and department on the internal event leaderboard for educational purposes. I can request removal of my record at any time.";
+  "I consent to participating in the InTouchCX Security Awareness Campaign and understand that my nickname and aggregated score will be displayed on the internal company leaderboard.";
 
-export default function RegistrationPage() {
+export default function RegistroPage() {
   const router = useRouter();
   const setPlayer = usePlayerStore((s) => s.setPlayer);
 
@@ -23,18 +23,14 @@ export default function RegistrationPage() {
   const [employeeCode, setEmployeeCode] = useState("");
   const [consent, setConsent] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanName = name.trim();
 
-    if (cleanName.length < 2) {
-      setError("Please enter your name (minimum 2 characters).");
-      synth.playError();
-      return;
-    }
-    if (cleanName.length > 40) {
-      setError("Name cannot exceed 40 characters.");
+    if (!cleanName || cleanName.length < 3) {
+      setError("Please enter your full name (at least 3 characters).");
       synth.playError();
       return;
     }
@@ -48,20 +44,8 @@ export default function RegistrationPage() {
     completeRegistration(cleanName, area, employeeCode);
   };
 
-  const handleDemoQuickStart = () => {
-    const demoNames = [
-      "Camila Rodriguez",
-      "Andrew Vance",
-      "Daniela Brooks",
-      "Matthew Green",
-      "Laura Diaz",
-      "James Cooper",
-    ];
-    const picked = demoNames[Math.floor(Math.random() * demoNames.length)];
-    completeRegistration(picked, area, "DEMO-001");
-  };
-
-  const completeRegistration = (fullName: string, playerArea: string, code?: string) => {
+  const completeRegistration = async (fullName: string, playerArea: string, code?: string) => {
+    setIsSubmitting(true);
     synth.playCoin();
     const parts = fullName.trim().split(/\s+/);
     const shortName =
@@ -69,10 +53,29 @@ export default function RegistrationPage() {
         ? `${parts[0]} ${parts[1][0].toUpperCase()}.`
         : parts[0];
 
-    const newPlayerId = "p_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now();
+    let registeredId = "p_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now();
+
+    try {
+      const res = await fetch("/api/player/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: fullName,
+          shortName,
+          area: playerArea,
+          employeeCode: code || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data?.ok && data?.player?.id) {
+        registeredId = data.player.id;
+      }
+    } catch (e) {
+      console.warn("Offline registration fallback:", e);
+    }
 
     setPlayer({
-      playerId: newPlayerId,
+      playerId: registeredId,
       name: fullName,
       shortName,
       area: playerArea,
@@ -95,26 +98,16 @@ export default function RegistrationPage() {
       <main className="flex-1 max-w-lg w-full mx-auto px-4 py-6 flex flex-col justify-center">
         <div className="icx-card rounded-3xl p-6 sm:p-8 animate-fade-slide-up">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <MascotAuditor mood="happy" size={54} />
-              <div>
-                <h1 className="text-xl sm:text-2xl font-extrabold text-white">
-                  Join Security Arcade
-                </h1>
-                <p className="text-xs text-brand-muted">
-                  Score points for your department leaderboard
-                </p>
-              </div>
+          <div className="flex items-center gap-3 mb-6">
+            <MascotAuditor mood="happy" size={54} />
+            <div>
+              <h1 className="text-xl sm:text-2xl font-extrabold text-white">
+                Join Security Arcade
+              </h1>
+              <p className="text-xs text-brand-muted">
+                Score points for your department leaderboard
+              </p>
             </div>
-
-            <button
-              type="button"
-              onClick={handleDemoQuickStart}
-              className="btn-interactive px-3 py-1.5 rounded-xl bg-brand-primary/15 hover:bg-brand-primary/25 border border-brand-primary/40 text-brand-primary text-xs font-extrabold shrink-0"
-            >
-              ⚡ 1-Click Demo
-            </button>
           </div>
 
           {error && (
@@ -135,7 +128,7 @@ export default function RegistrationPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 maxLength={40}
-                placeholder="e.g. Camila Rodriguez"
+                placeholder="Enter your name and surname"
                 className="w-full h-12 px-4 rounded-xl bg-[#051B0B]/90 border border-brand-primary/30 text-white placeholder-brand-muted/40 text-sm font-semibold focus:outline-none focus:border-brand-primary transition"
                 autoComplete="name"
               />
@@ -190,9 +183,10 @@ export default function RegistrationPage() {
             {/* Submit */}
             <button
               type="submit"
-              className="btn-interactive btn-icx-primary w-full h-14 rounded-2xl font-extrabold text-base tracking-wide flex items-center justify-center gap-2 mt-4"
+              disabled={isSubmitting}
+              className="btn-interactive btn-icx-primary w-full h-14 rounded-2xl font-extrabold text-base tracking-wide flex items-center justify-center gap-2 mt-4 disabled:opacity-50"
             >
-              <span>START PLAYING</span>
+              <span>{isSubmitting ? "REGISTERING..." : "START PLAYING"}</span>
               <span className="text-lg">→</span>
             </button>
           </form>

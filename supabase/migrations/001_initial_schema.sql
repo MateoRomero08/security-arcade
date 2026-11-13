@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS players (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   event_id UUID REFERENCES events(id) ON DELETE SET NULL,
   area_id UUID REFERENCES areas(id) ON DELETE RESTRICT,
-  name TEXT NOT NULL,
+  name TEXT NOT NULL UNIQUE,
   short_name TEXT NOT NULL,
   employee_code TEXT,
   session_token TEXT UNIQUE,
@@ -293,14 +293,16 @@ CREATE POLICY "pci_requirements_public_read" ON pci_requirements FOR SELECT USIN
 CREATE POLICY "legal_texts_public_read" ON legal_texts FOR SELECT USING (is_current = true);
 CREATE POLICY "brand_public_read" ON brand_settings FOR SELECT USING (true);
 
--- Jugadores pueden registrarse (INSERT) y leer su propio registro
+-- Jugadores pueden registrarse (INSERT), actualizarse (UPDATE) y leer
 CREATE POLICY "players_insert" ON players FOR INSERT WITH CHECK (true);
 CREATE POLICY "players_select_own" ON players FOR SELECT USING (true);
+CREATE POLICY "players_update_all" ON players FOR UPDATE USING (true);
 
--- game_sessions y session_actions: ESCRITURA EXCLUSIVA VÍA SERVICE_ROLE (Server Actions / Route Handlers)
--- Ningún cliente anónimo puede hacer INSERT ni UPDATE directo de scores en Postgres.
+-- game_sessions y session_actions: lectura e inserción permitidas
 CREATE POLICY "sessions_read_all" ON game_sessions FOR SELECT USING (is_valid = true);
+CREATE POLICY "sessions_insert_all" ON game_sessions FOR INSERT WITH CHECK (true);
 CREATE POLICY "actions_read_own" ON session_actions FOR SELECT USING (true);
+CREATE POLICY "actions_insert_all" ON session_actions FOR INSERT WITH CHECK (true);
 
 -- Phishing Scenarios NO tienen SELECT anónimo para evitar filtración de respuestas en el navegador
 -- Solo el servidor lee mediante Service Role para alimentar el generador de partidas

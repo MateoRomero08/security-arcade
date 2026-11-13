@@ -5,24 +5,19 @@ import Link from "next/link";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { BRAND_CONFIG } from "@/config/brand";
 
-const TV_LEADERBOARD = [
-  { tag: "Camila R.", area: "S-OPS", total: 1670, auditor: 820, fraud: 850 },
-  { tag: "Andrew V.", area: "IT", total: 1600, auditor: 790, fraud: 810 },
-  { tag: "Valerie M.", area: "EX", total: 1500, auditor: 740, fraud: 760 },
-  { tag: "Sebastian D.", area: "LSS", total: 1400, auditor: 680, fraud: 720 },
-  { tag: "Daniela B.", area: "HR", total: 1340, auditor: 650, fraud: 690 },
-  { tag: "Matthew G.", area: "RECRUITMENT", total: 1250, auditor: 610, fraud: 640 },
-  { tag: "Carlos P.", area: "FACILITIES", total: 1210, auditor: 590, fraud: 620 },
-];
+interface TvLeaderboardItem {
+  tag: string;
+  name: string;
+  area: string;
+  total: number;
+  auditor: number;
+  fraud: number;
+}
 
 export default function TvModePage() {
   const [qrUrl, setQrUrl] = useState("");
-  const [leaderboard, setLeaderboard] = useState(TV_LEADERBOARD);
-  const [recentPlayers] = useState([
-    { name: "James C.", area: "S-OPS", time: "1 min ago" },
-    { name: "Paula T.", area: "EX", time: "2 min ago" },
-    { name: "Philip K.", area: "IT", time: "4 min ago" },
-  ]);
+  const [leaderboard, setLeaderboard] = useState<TvLeaderboardItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const origin = typeof window !== "undefined" ? window.location.origin : "https://security-arcade.intouchcx.interno";
@@ -32,23 +27,27 @@ export default function TvModePage() {
       fetch("/api/leaderboard")
         .then((r) => r.json())
         .then((data) => {
-          if (data?.leaderboard && Array.isArray(data.leaderboard) && data.leaderboard.length > 0) {
+          setLoading(false);
+          if (data?.leaderboard && Array.isArray(data.leaderboard)) {
             setLeaderboard(
               data.leaderboard.map((item: any) => ({
-                tag: item.short_name ? `${item.short_name}` : item.tag.split("·")[0].trim(),
+                tag: item.tag ? item.tag.split("·")[0].trim() : item.name,
+                name: item.name,
                 area: item.area,
-                total: item.totalScore || item.total,
-                auditor: item.auditorScore || item.auditor,
-                fraud: item.fraudScore || item.fraud,
+                total: item.totalScore || item.total || 0,
+                auditor: item.auditorScore || item.auditor || 0,
+                fraud: item.fraudScore || item.fraud || 0,
               }))
             );
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          setLoading(false);
+        });
     };
 
     fetchLeaderboard();
-    const interval = setInterval(fetchLeaderboard, 10000);
+    const interval = setInterval(fetchLeaderboard, 8000);
     return () => clearInterval(interval);
   }, []);
 
@@ -87,40 +86,56 @@ export default function TvModePage() {
               🏆 LEADERBOARD STANDINGS
             </h1>
             <span className="font-mono text-xs text-brand-muted">
-              Real-time updates
+              Live database updates
             </span>
           </div>
 
-          <div className="space-y-2.5">
-            {leaderboard.map((item, idx) => {
-              const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`;
-              return (
-                <div
-                  key={idx}
-                  className="icx-card rounded-2xl px-5 py-3.5 flex items-center justify-between text-base lg:text-lg border-brand-primary/30 transition-transform duration-300 hover:scale-[1.01]"
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="font-mono font-black text-xl lg:text-2xl text-brand-primary w-8 text-center">
-                      {medal}
-                    </span>
-                    <div>
-                      <div className="font-extrabold text-white">{item.tag}</div>
-                      <div className="text-xs text-brand-muted font-mono uppercase">
-                        {item.area} · Auditor: {item.auditor} | Fraud: {item.fraud}
+          {loading ? (
+            <div className="icx-card rounded-2xl p-12 text-center text-brand-muted font-mono animate-pulse">
+              Connecting to live database standings...
+            </div>
+          ) : leaderboard.length === 0 ? (
+            <div className="icx-card rounded-2xl p-10 text-center space-y-3 border-2 border-brand-primary/30">
+              <div className="text-4xl">🎮</div>
+              <div className="text-xl font-mono font-black text-white">
+                NO SCORES RECORDED YET
+              </div>
+              <p className="text-xs text-brand-muted max-w-md mx-auto">
+                Scan the QR code on the right with your phone to jump into the game and claim the #1 spot on the big screen!
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {leaderboard.map((item, idx) => {
+                const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`;
+                return (
+                  <div
+                    key={idx}
+                    className="icx-card rounded-2xl px-5 py-3.5 flex items-center justify-between text-base lg:text-lg border-brand-primary/30 transition-transform duration-300 hover:scale-[1.01]"
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="font-mono font-black text-xl lg:text-2xl text-brand-primary w-8 text-center">
+                        {medal}
+                      </span>
+                      <div>
+                        <div className="font-extrabold text-white">{item.tag}</div>
+                        <div className="text-xs text-brand-muted font-mono uppercase">
+                          {item.area} · Auditor: {item.auditor} | Fraud: {item.fraud}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <span className="font-mono font-black text-2xl text-brand-primary">
-                    {item.total} pts
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+                    <span className="font-mono font-black text-2xl text-brand-primary">
+                      {item.total} pts
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Right Column: Giant QR & Recent Activity */}
+        {/* Right Column: Giant QR */}
         <div className="lg:col-span-5 flex flex-col items-center text-center space-y-6">
           <div className="icx-card rounded-3xl p-8 border-2 border-brand-primary/40 shadow-[0_0_40px_rgba(67,229,104,0.25)] flex flex-col items-center">
             <span className="px-3.5 py-1 rounded-full bg-brand-primary/15 text-brand-primary text-xs font-mono font-black uppercase tracking-widest mb-3">
@@ -150,31 +165,30 @@ export default function TvModePage() {
             </p>
           </div>
 
-          {/* Recent Players */}
+          {/* Recent Players Status */}
           <div className="w-full icx-subcard rounded-2xl p-4 text-left">
             <div className="text-[11px] font-mono uppercase tracking-wider text-brand-muted font-bold mb-2">
-              Recently joined players:
+              Event Status:
             </div>
-            <div className="flex flex-wrap gap-2">
-              {recentPlayers.map((p, i) => (
-                <span
-                  key={i}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#031006] border border-brand-primary/20 text-xs text-slate-200"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
-                  <strong className="text-white">{p.name}</strong>
-                  <span className="text-brand-muted">({p.area})</span>
+            <div className="text-xs text-slate-300">
+              {leaderboard.length > 0 ? (
+                <span className="text-brand-primary font-mono font-bold">
+                  ● {leaderboard.length} active players competing across departments
                 </span>
-              ))}
+              ) : (
+                <span className="text-brand-muted font-mono">
+                  Waiting for players to join the arcade shift...
+                </span>
+              )}
             </div>
           </div>
         </div>
       </main>
 
-      {/* TV Footer */}
+      {/* Footer */}
       <footer className="pt-4 border-t border-brand-primary/20 flex items-center justify-between text-xs text-brand-muted font-mono">
-        <span>InTouchCX · Security Operations & Compliance Awareness</span>
-        <span>PCI DSS v4.0.1 Active Awareness</span>
+        <div>InTouchCX · Information Security & PCI DSS Awareness v4.0.1</div>
+        <div className="text-brand-primary">LIVE STANDINGS</div>
       </footer>
     </div>
   );
