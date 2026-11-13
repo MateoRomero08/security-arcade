@@ -21,8 +21,8 @@ export async function POST(req: NextRequest) {
 
     const { data: areaData } = await supabase
       .from("areas")
-      .select("id")
-      .eq("name", targetArea)
+      .select("id, name")
+      .ilike("name", targetArea.trim())
       .maybeSingle();
 
     if (areaData?.id) {

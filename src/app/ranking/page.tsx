@@ -19,6 +19,7 @@ export default function RankingPage() {
   const player = usePlayerStore((s) => s.player);
   const [activeTab, setActiveTab] = useState<"INDIVIDUAL" | "AREAS" | "GAMES">("INDIVIDUAL");
   const [leaderboard, setLeaderboard] = useState<RankingEntry[]>([]);
+  const [dbAreas, setDbAreas] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [qrUrl, setQrUrl] = useState("");
@@ -26,6 +27,16 @@ export default function RankingPage() {
   useEffect(() => {
     const currentUrl = typeof window !== "undefined" ? window.location.origin : "https://security-arcade.intouchcx.interno";
     setQrUrl(`https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&data=${encodeURIComponent(currentUrl)}`);
+
+    // Fetch live areas from database
+    fetch("/api/areas")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.ok && Array.isArray(data.areas)) {
+          setDbAreas(data.areas);
+        }
+      })
+      .catch(() => {});
 
     // Fetch real leaderboard from Supabase via server API
     fetch("/api/leaderboard")
@@ -64,18 +75,22 @@ export default function RankingPage() {
 
   const areaStats = React.useMemo(() => {
     const map: Record<string, number[]> = {};
+    // Pre-populate with all dynamic areas from Supabase
+    dbAreas.forEach((a) => {
+      map[a] = [];
+    });
     leaderboard.forEach((item) => {
       if (!map[item.area]) map[item.area] = [];
       map[item.area].push(item.totalScore);
     });
 
     const entries = Object.entries(map).map(([area, scores]) => {
-      const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+      const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
       return { area, avg, count: scores.length };
     });
 
-    return entries.sort((a, b) => b.avg - a.avg);
-  }, [leaderboard]);
+    return entries.sort((a, b) => b.avg - a.avg || b.count - a.count);
+  }, [leaderboard, dbAreas]);
 
   const maxAreaAvg = Math.max(1, areaStats[0]?.avg || 1000);
 

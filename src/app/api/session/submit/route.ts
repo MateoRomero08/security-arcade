@@ -62,8 +62,8 @@ export async function POST(req: NextRequest) {
 
         const { data: areaData, error: areaErr } = await supabase
           .from("areas")
-          .select("id")
-          .eq("name", playerAreaName)
+          .select("id, name")
+          .ilike("name", playerAreaName.trim())
           .maybeSingle();
 
         if (areaErr) {

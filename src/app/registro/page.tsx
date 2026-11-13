@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArcadeHeader } from "@/components/arcade/ArcadeHeader";
@@ -8,8 +8,6 @@ import { MascotAuditor } from "@/components/arcade/MascotAuditor";
 import { usePlayerStore } from "@/stores/playerStore";
 import { synth } from "@/lib/audio/synth";
 import { COMPANY_AREAS } from "@/config/areas";
-
-const DEFAULT_AREAS = COMPANY_AREAS;
 
 const DEFAULT_CONSENT_TEXT =
   "I consent to participating in the InTouchCX Fraud Awareness Week Campaign and understand that my nickname and aggregated score will be displayed on the internal company leaderboard.";
@@ -19,11 +17,32 @@ export default function RegistroPage() {
   const setPlayer = usePlayerStore((s) => s.setPlayer);
 
   const [name, setName] = useState("");
-  const [area, setArea] = useState<string>(DEFAULT_AREAS[0]);
+  const [areas, setAreas] = useState<string[]>(Array.from(COMPANY_AREAS));
+  const [area, setArea] = useState<string>(COMPANY_AREAS[0] || "S-OPS");
+  const [loadingAreas, setLoadingAreas] = useState(true);
   const [employeeCode, setEmployeeCode] = useState("");
   const [consent, setConsent] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch areas dynamically from Supabase database
+  useEffect(() => {
+    fetch("/api/areas")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.ok && Array.isArray(data.areas) && data.areas.length > 0) {
+          setAreas(data.areas);
+          // Auto-select first area or preserve current if still valid
+          setArea((prev) => (data.areas.includes(prev) ? prev : data.areas[0]));
+        }
+      })
+      .catch((err) => {
+        console.warn("[Registro] Failed to fetch live areas from database:", err);
+      })
+      .finally(() => {
+        setLoadingAreas(false);
+      });
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,17 +153,22 @@ export default function RegistroPage() {
               />
             </div>
 
-            {/* Department */}
+            {/* Department (Live from Supabase) */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-brand-muted mb-1.5">
-                Company Department / Area <span className="text-brand-primary">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-brand-muted">
+                  Company Department / Area <span className="text-brand-primary">*</span>
+                </label>
+                <span className="text-[10px] font-mono text-brand-primary">
+                  {loadingAreas ? "Loading areas..." : `${areas.length} areas available`}
+                </span>
+              </div>
               <select
                 value={area}
                 onChange={(e) => setArea(e.target.value)}
                 className="w-full h-12 px-4 rounded-xl bg-[#051B0B]/90 border border-brand-primary/30 text-white text-sm font-semibold focus:outline-none focus:border-brand-primary transition cursor-pointer"
               >
-                {DEFAULT_AREAS.map((a) => (
+                {areas.map((a) => (
                   <option key={a} value={a} className="bg-[#051B0B] text-white">
                     {a}
                   </option>
