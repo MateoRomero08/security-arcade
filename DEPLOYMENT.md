@@ -63,3 +63,4 @@ git push -u origin main
 La aplicación cuenta con arquitectura **cero caídas**:
 - Si Supabase está desconectado o las variables no se han configurado aún, la aplicación funciona de forma completamente autónoma usando su motor procedural en memoria y almacenamiento local (`localStorage`).
 - Tan pronto configures las variables de entorno en Vercel, el sistema comenzará a registrar automáticamente a los jugadores y sus sesiones en las tablas de Postgres en tiempo real.
+
